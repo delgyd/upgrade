@@ -1,3 +1,4 @@
+--upgrade入口
 local log = ngx.log
 local ERR = ngx.ERR
 local INFO = ngx.INFO
