@@ -3,8 +3,7 @@ local log = ngx.log
 local ERR = ngx.ERR
 local setmetatable = setmetatable
 local _M = {
-    _VERSION = "1.0.0",
-    _AUTHOR = "Andy Ai"
+    _VERSION = "1.0.0"
 }
 local mt = { __index = _M }
 local function errlog(...)
