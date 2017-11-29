@@ -1,13 +1,7 @@
 --proxy
 local _M = {}
-local log = ngx.log
-local ERR = ngx.ERR
-local INFO = ngx.INFO
-local WARN = ngx.WARN
-local DEBUG = ngx.DEBUG
 
 local headers = ngx.req.get_headers()
-
 local conf = require('interface.init')
 local redisconf = conf.Redis
 local rediscmd = require('interface.utils.rediscmd')
@@ -94,7 +88,7 @@ _M.proxy_association = function(self,option) --proxy {'ip','phone','version','he
 		local tlen = table.getn(temp)
 		local olen = table.getn(option)
 		if tlen >= olen then
-					up_upstream:upstream("key")
+					up_upstream:upstream()
 		else
 			return
 		end	
