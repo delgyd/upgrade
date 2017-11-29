@@ -51,7 +51,9 @@ _M.upstream = function(self)
 			end
 			local ok,err = rediscmd:hdel('upgrade',serverip)
 			if not ok then return end
-			os.execute('sh /data/webapp/openresty/nginx/conf/lua_conf/reload.sh')	
+			os.execute('sh /data/webapp/openresty/nginx/conf/lua_conf/reload.sh')
+		elseif ok == 'updating' then
+			ngx.exec('@proxyB')
 		end
 	else
 		local hok,herr = rediscmd:hget('upgrade',hostip)
@@ -69,13 +71,11 @@ _M.upstream = function(self)
 					if not ok then return end
 					os.execute('sh /data/webapp/openresty/nginx/conf/lua_conf/reload.sh')
 				end
-			-- else
-			-- 	local ok,err = rediscmd:hdel('upgrade',hostip)
-			-- 	if ok == ngx.null then ok = nil end
-			-- 	if not ok then return end
 			end
 		else
-			if sok == 'end' or herr then
+			if sok == 'updating' and hok == 'updating' then
+				ngx.exec('@proxyB')
+			elseif sok == 'end' or herr then
 				local ok,err = rediscmd:hdel('upgrade',hostip)
 				if ok == ngx.null then ok = nil end
 				if not ok then return end
