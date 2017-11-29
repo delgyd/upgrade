@@ -1,17 +1,9 @@
 --upgrade入口　
-local log = ngx.log
-local ERR = ngx.ERR
-local INFO = ngx.INFO
-local WARN = ngx.WARN
-local DEBUG = ngx.DEBUG
-
 local conf = require('interface.init')
 local redisconf = conf.Redis
 local rediscmd = require('interface.utils.rediscmd')
 local ProxyMod = require('interface.proxy')
 local headers = ngx.req.get_headers()
-
-
 
 local status,err = rediscmd:hget('upgrade','switch')
 if not status then
