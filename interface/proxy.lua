@@ -1,7 +1,6 @@
 --proxy
 local _M = {}
 
-local headers = ngx.req.get_headers()
 local conf = require('interface.init')
 local redisconf = conf.Redis
 local rediscmd = require('interface.utils.rediscmd')
@@ -16,8 +15,8 @@ local function StrToTable(str)
     return loadstring("return " .. str)()
 end
 
-_M.proxy_ip = function(self,option) --{'192.168.1.200'}
-	local IP = headers['X_FORWARDED_FOR'] or ngx.var.remote_addr
+
+_M.proxy_ip = function(self,option,IP) --{'192.168.1.200'}
 	local OtoT = StrToTable(option)
 	for k,v in pairs(OtoT) do
 		if v == IP then
@@ -26,8 +25,7 @@ _M.proxy_ip = function(self,option) --{'192.168.1.200'}
 	end
 end
 
-_M.proxy_head = function(self,option) --{'xwtec'}
-	local CHANNEL = headers['channel']
+_M.proxy_head = function(self,option,CHANNEL) --{'xwtec'}
 	local OtoT = StrToTable(option)
 	for k,v in pairs(OtoT) do
 		if v == CHANNEL then
@@ -36,8 +34,7 @@ _M.proxy_head = function(self,option) --{'xwtec'}
 	end
 end
 
-_M.proxy_phone = function(self,option) --{'13693464'}
-	local PHONE = ngx.var['cookie_SmsNoPwdLoginCookie']
+_M.proxy_phone = function(self,option,PHONE) --{'13693464'}
 	local OtoT = StrToTable(option)
 	for k,v in pairs(OtoT) do
 		if v == PHONE then
@@ -46,8 +43,7 @@ _M.proxy_phone = function(self,option) --{'13693464'}
 	end
 end
 
-_M.proxy_version = function(self,option) --{'3.4.0'}
-	local VERSION = headers['version']
+_M.proxy_version = function(self,option,VERSION) --{'3.4.0'}
 	local OtoT = StrToTable(option)
 	for k,v in pairs(OtoT) do
 		if v == VERSION then
@@ -56,12 +52,7 @@ _M.proxy_version = function(self,option) --{'3.4.0'}
 	end
 end
 
-_M.proxy_association = function(self,option) --proxy {'ip','phone','version','head'}多策略组合平滑升级 --{'ip','phone'}
-		local IP = headers['X_FORWARDED_FOR'] or ngx.var.remote_addr
-		local CHANNEL = headers['channel']
-		local VERSION = headers['version']
-		local PHONE = ngx.var['cookie_SmsNoPwdLoginCookie']
-		local REQINFO = {IP,CHANNEL,VERSION,PHONE}
+_M.proxy_association = function(self,option,REQINFO) --proxy {'ip','phone','version','head'}多策略组合平滑升级 --{'ip','phone'}
 		local PP = {}
 		for pk,pv in pairs(option) do
 			local ok,err = rediscmd:hget('upgrade',pv)

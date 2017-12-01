@@ -16,5 +16,4 @@ _M.Service = {
         ["service"]    = ngx.var.server,
 }
 
-
 return _M
