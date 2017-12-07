@@ -1,12 +1,9 @@
 --proxy
 local _M = {}
 
-local conf = require('interface.init')
-local redisconf = conf.Redis
 local rediscmd = require('interface.utils.rediscmd')
-local redis = require('interface.utils.redismod')
 local up_upstream = require('interface.upstream')
-
+local key = 'upgrade'
 
 local function StrToTable(str)
     if str == nil or type(str) ~= "string" then
@@ -55,8 +52,7 @@ end
 _M.proxy_association = function(self,option,REQINFO) --proxy {'ip','phone','version','head'}多策略组合平滑升级 --{'ip','phone'}
 		local PP = {}
 		for pk,pv in pairs(option) do
-			local ok,err = rediscmd:hget('upgrade',pv)
-			if not ok then ngx.say('redis bad') end
+			local ok,err = rediscmd:hget(key,pv)
 			local oktotable = StrToTable(ok)
 			if type(oktotable) == 'table' then
 				for okk,okv in pairs(oktotable) do
@@ -79,10 +75,9 @@ _M.proxy_association = function(self,option,REQINFO) --proxy {'ip','phone','vers
 		local tlen = table.getn(temp)
 		local olen = table.getn(option)
 		if tlen >= olen then
-					up_upstream:upstream()
+			up_upstream:upstream()
 		else
 			return
 		end	
-		--]]
 end
 return _M

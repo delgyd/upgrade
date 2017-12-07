@@ -1,6 +1,5 @@
 --upgrade入口　
-local conf = require('interface.init')
-local redisconf = conf.Redis
+
 local rediscmd = require('interface.utils.rediscmd')
 local ProxyMod = require('interface.proxy')
 
@@ -14,18 +13,22 @@ local VERSION = headers['version']
 local PHONE = ngx.var['cookie_SmsNoPwdLoginCookie']
 if not (IP and CHANNEL and VERSION and PHONE) then return end
 
-local status,err = rediscmd:hget('upgrade','switch')
+if type(IP) ~= 'table' then  --多NAT后,源IP有多个,类型为table
+	log(ERR,IP..'|'..CHANNEL..'|'..VERSION..'|'..PHONE)
+end
+local key = 'upgrade'
+
+local status,err = rediscmd:hget(key,'switch')
 if not status then
 	return
 elseif status == "off" then
 	return
 end
-local proxy,err = rediscmd:hget('upgrade','proxy')
+
+local proxy,err = rediscmd:hget(key,'proxy')
 if not proxy then
 	return
 end
-
-log(ERR,IP..'|'..CHANNEL..'|'..VERSION..'|'..PHONE)
 
 local function StrToTable(str)
     if str == nil or type(str) ~= "string" then
@@ -45,12 +48,16 @@ function Proxy(option)
 		table.insert(field,table.concat({'proxy',option},'_'))
 	end
 	if table.getn(field) == 1 then
-		local ok,err = rediscmd:hget('upgrade',field[1])
+		local ok,err = rediscmd:hget(key,field[1])
 		if not ok then
 			return
 		end
 		if field[1] == 'proxy_ip' then
-			ProxyMod:proxy_ip(ok,IP)
+			if type(IP) ~= 'table' then
+				ProxyMod:proxy_ip(ok,IP)
+			else
+				return
+			end
 		elseif field[1] == 'proxy_head' then
 			ProxyMod:proxy_head(ok,CHANNEL)
 		elseif field[1] == 'proxy_phone' then
@@ -62,6 +69,7 @@ function Proxy(option)
 		end
 	else
 		local REQINFO = {IP,CHANNEL,VERSION,PHONE}
+		local serverip,serr = rediscmd:hget('upgrade','update')
 		ProxyMod:proxy_association(field,REQINFO)
 	end
 end
