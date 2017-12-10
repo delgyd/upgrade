@@ -14,7 +14,17 @@ upgrade
 -------upstream_upgrade:"upstream upgrade {\n\tserver 192.168.1.2:8001;\n\tserver 192.168.1.2:8002;\n}\n\n\n\n" [重置upgrade配置]
 -------upstream_transfer:"upstream online {\n\tserver 192.168.1.213:8001;\n\tserver 192.168.1.213:8002;\n}\n\n\n\n"　[重置upgrade服务器的online配置]
 
+hash-key/hset
+limit
+-------grade1:30
+-------grade2:60
+-------grade3:90
 
+Set（集合）
+limit_white_list (优先级高于黑名单）
+	id、url
+limit_black_list
+	id、url
 
 
 感谢！
