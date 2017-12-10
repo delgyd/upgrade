@@ -13,3 +13,9 @@ upgrade
 -------upstream_online:"upstream online {\n\tserver 192.168.1.212:8001;\n\tserver 192.168.1.212:8002;\n}\n\n\n\n"　[现网配置备份]
 -------upstream_upgrade:"upstream upgrade {\n\tserver 192.168.1.2:8001;\n\tserver 192.168.1.2:8002;\n}\n\n\n\n" [重置upgrade配置]
 -------upstream_transfer:"upstream online {\n\tserver 192.168.1.213:8001;\n\tserver 192.168.1.213:8002;\n}\n\n\n\n"　[重置upgrade服务器的online配置]
+
+
+
+
+感谢！
+https://github.com/anjia0532/lua-resty-redis-util
