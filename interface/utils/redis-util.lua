@@ -52,8 +52,6 @@ local function _connect_mod(self,redis)
       local ok, err = redis:auth(password)
       if not ok then
         return
-      -- if ok or ok == nil or err == nil then
-      --   return nil
       end
     end
   end
