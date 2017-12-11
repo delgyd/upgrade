@@ -76,7 +76,7 @@ local carry_redis = function (self)
 	end
 end
 _M.limit = function(self,info_pass,info_limit)
-	if info_pass.active >= 1 and info_pass.active < 600 then
+	if info_pass.active >= 500 and info_pass.active < 600 then
 		if  info_pass.rdm <= info_pass.grade1 then
 			carry_redis(info_limit)
 		else

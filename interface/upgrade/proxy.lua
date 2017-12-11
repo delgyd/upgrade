@@ -17,7 +17,7 @@ _M.proxy_ip = function(self,option,IP,info_pass,info_limit) --{'192.168.1.200'}
 	local OtoT = StrToTable(option)
 	for k,v in pairs(OtoT) do
 		if v == IP then
-			up_upstream:upstream()
+			up_upstream:upstream(info_pass,info_limit)
 		else
 			limit_mode:limit(info_pass,info_limit)
 		end
@@ -28,7 +28,7 @@ _M.proxy_head = function(self,option,CHANNEL,info_pass,info_limit) --{'xwtec'}
 	local OtoT = StrToTable(option)
 	for k,v in pairs(OtoT) do
 		if v == CHANNEL then
-			up_upstream:upstream()
+			up_upstream:upstream(info_pass,info_limit)
 		else
 			limit_mode:limit(info_pass,info_limit)
 		end
@@ -39,7 +39,7 @@ _M.proxy_phone = function(self,option,PHONE,info_pass,info_limit) --{'13693464'}
 	local OtoT = StrToTable(option)
 	for k,v in pairs(OtoT) do
 		if v == PHONE then
-			up_upstream:upstream()
+			up_upstream:upstream(info_pass,info_limit)
 		else
 			limit_mode:limit(info_pass,info_limit)
 		end
@@ -50,7 +50,7 @@ _M.proxy_version = function(self,option,VERSION,info_pass,info_limit) --{'3.4.0'
 	local OtoT = StrToTable(option)
 	for k,v in pairs(OtoT) do
 		if v == VERSION then
-			up_upstream:upstream()
+			up_upstream:upstream(info_pass,info_limit)
 		else
 			limit_mode:limit(info_pass,info_limit)
 		end
