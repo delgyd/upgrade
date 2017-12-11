@@ -41,16 +41,16 @@ _M.upstream = function(self,info_pass,info_limit)
 	if serverip == info_pass.hostip then
 		--根据更新状态,备份online-upstream配置各重置配置,并更改更新状态重新加载nginx,当状态为end后,恢复online-upstream配置,并清理更新状态
 		if s_status == 'begin' then
-			local upstream = readfile("/data/webapp/openresty/nginx/conf/online.conf")
+			local upstream = readfile("/data/webapp/openresty/nginx/conf/upstream_conf/online.conf")
 			local ok,err = rediscmd:hset(key,'upstream_online',upstream)
 			if not ok then return end
 			local ok,err =  rediscmd:hget(key,'upstream_transfer')
 			if ok then
-				writefile('/data/webapp/openresty/nginx/conf/online.conf',ok)
+				writefile('/data/webapp/openresty/nginx/conf/upstream_conf/online.conf',ok)
 			end
 			local ok,err =  rediscmd:hget(key,'upstream_upgrade')
 			if ok then 
-				writefile('/data/webapp/openresty/nginx/conf/upgrade.conf',ok)
+				writefile('/data/webapp/openresty/nginx/conf/upstream_conf/upgrade.conf',ok)
 			end
 			local ok,err = rediscmd:hset(key,serverip,'updating')
 			if ok then
@@ -59,7 +59,7 @@ _M.upstream = function(self,info_pass,info_limit)
 		elseif s_status == 'end' then
 			local ok,err = rediscmd:hget(key,'upstream_online')
 			if ok then
-				writefile('/data/webapp/openresty/nginx/conf/online.conf',ok)
+				writefile('/data/webapp/openresty/nginx/conf/upstream_conf/online.conf',ok)
 			end
 			local ok,err = rediscmd:hdel(key,serverip)
 			if ok then
@@ -76,7 +76,7 @@ _M.upstream = function(self,info_pass,info_limit)
 			if s_status == 'updating' then
 				local ok,err =  rediscmd:hget(key,'upstream_upgrade')
 				if ok then
-					writefile('/data/webapp/openresty/nginx/conf/upgrade.conf',ok)
+					writefile('/data/webapp/openresty/nginx/conf/upstream_conf/upgrade.conf',ok)
 				end
 				local ok,err = rediscmd:hset(key,info_pass.hostip,'updating')
 				if ok then
