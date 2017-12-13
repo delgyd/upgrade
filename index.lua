@@ -6,14 +6,16 @@ local limit_mode = require('interface.limit.limitindex')
 local upgrade = require('interface.upgrade.upindex')
 local socket = require("socket")
 
-local function writefile(filename, info)
+local function writefile_log(filename, info)
     local wfile=io.open(filename, "a+")
     assert(wfile)
     wfile:write(info,'\n')
     wfile:close()
 end
-local limitlog = '/data/webapp/logs/limit_log/lua-'..os.date("%Y")..os.date("%m")..os.date("%d")..os.date("%H")..'.log'
+local limitlog = '/data/webapp/openresty/nginx/logs/lua-'..os.date("%Y")..os.date("%m")..os.date("%d")..os.date("%H")..'.log'
 local limitinfo = '['..os.date()..']'
+writefile_log(limitlog,'xxxxx')
+
 
 local url = ngx.var.uri
 if url == '/scmccClient/servlet/chargeNotify.do' then --充值回调
@@ -55,6 +57,10 @@ end
 local ckv = ngx.var["cookie_SmsNoPwdLoginCookie"]
 if not ckv then return end
 
+local headers = ngx.req.get_headers()
+local IP = headers['X_FORWARDED_FOR'] or ngx.var.remote_addr
+if type(IP) == 'table' then return end
+
 local grade1,err = rediscmd:hget('limit','grade1')
 local grade2,err = rediscmd:hget('limit','grade2')
 local grade3,err = rediscmd:hget('limit','grade3')
@@ -69,6 +75,10 @@ local info_limit = {
 	['grade3'] = tonumber(grade1) or 90,
 	['rdm'] = rdm,
 	['hostip'] = ngx.var.serverip,
+	['IP'] = IP or '192.168.1.33',
+	['CHANNEL'] = headers['channel'] or 'xwtec',
+	['VERSION'] = headers['version'] or '0.0.1',
+	['PHONE'] = ngx.var['cookie_SmsNoPwdLoginCookie'] or '10086',
 }
 local info_pass = {
 	['id'] = ckv,
@@ -80,6 +90,10 @@ local info_pass = {
 	['grade3'] = tonumber(grade1) or 90,
 	['rdm'] = rdm,
 	['hostip'] = ngx.var.serverip,
+	['IP'] = IP or '192.168.1.33',
+	['CHANNEL'] = headers['channel'] or 'xwtec',
+	['VERSION'] = headers['version'] or '0.0.1',
+	['PHONE'] = ngx.var['cookie_SmsNoPwdLoginCookie'] or '10086',
 }
 
 --获取黑白名单；黑名单请求限制访问，白名单请求，只直接跳过,黑名单将info_pass状态重置为limit
@@ -112,14 +126,12 @@ else
 	info_pass['servermod'] = 'scmcc'
 end
 
-local upgrade_switch,err = rediscmd:hget('upgrade','switch') -- on/off/nil
-local upgrade_proxy,err = upgrade:upgrade_proxy() --true/nil
+local upgrade_switch,err = upgrade:upgrade_switch('switch') -- on/off/nil
+local upgrade_proxy,err = upgrade:upgrade_proxy('proxy') --true/nil
 if upgrade_switch == 'off' or upgrade_switch == nil then
-
 	limit_mode:limit(info_pass,info_limit)
 elseif upgrade_switch == 'on' and upgrade_proxy then
-	-- ngx.say(info_pass.status)
-	upgrade:upgrade(upgrade_proxy,info_pass,info_limit)
+		upgrade:upgrade(upgrade_proxy,info_pass,info_limit)
 else
 	limit_mode:limit(info_pass,info_limit)
 end

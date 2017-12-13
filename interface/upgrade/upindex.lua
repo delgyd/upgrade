@@ -2,32 +2,17 @@
 local _M = {}
 local rediscmd = require('interface.utils.rediscmd')
 local ProxyMod = require('interface.upgrade.proxy')
--- local limit = require('interface.limit.limit')
--- local socket = require("socket")
 
-local log = ngx.log
-local ERR = ngx.ERR
-
-local headers = ngx.req.get_headers()
-local IP = headers['X_FORWARDED_FOR'] or ngx.var.remote_addr
-local CHANNEL = headers['channel']
-local VERSION = headers['version']
-local PHONE = ngx.var['cookie_SmsNoPwdLoginCookie']
-if not (IP and CHANNEL and VERSION and PHONE) then return end
-
--- if type(IP) ~= 'table' then  --多NAT后,源IP有多个,类型为table
--- 	log(ERR,IP..'|'..CHANNEL..'|'..VERSION..'|'..PHONE)
--- end
 local key = 'upgrade'
-_M.upgrade_switch = function(self)
-	local status,err = rediscmd:hget(key,'switch')
+_M.upgrade_switch = function(self,field)
+	local status,err = rediscmd:hget(key,field)
 	if not status or status == 'off' then
-		return nil
+		return 'off'
 	end
-	return true
+	return 'on'
 end
-_M.upgrade_proxy = function(self)
-	local proxy,err = rediscmd:hget(key,'proxy')
+_M.upgrade_proxy = function(self,field)
+	local proxy,err = rediscmd:hget(key,field)
 	if not proxy then
 		return nil
 	end
@@ -57,25 +42,28 @@ _M.upgrade = function(self,option,info_pass,info_limit)
 			return
 		end
 		if field[1] == 'proxy_ip' then
-			if type(IP) ~= 'table' then
-				ProxyMod:proxy_ip(ok,IP,info_pass,info_limit)
+			if type(info_pass.IP) ~= 'table' then
+				ProxyMod:proxy_ip(ok,info_pass.IP,info_pass,info_limit)
+				return
 			else
 				return
 			end
 		elseif field[1] == 'proxy_head' then
-			ProxyMod:proxy_head(ok,CHANNEL,info_pass,info_limit)
+			ProxyMod:proxy_head(ok,info_pass.CHANNEL,info_pass,info_limit)
+			return
 		elseif field[1] == 'proxy_phone' then
-			ProxyMod:proxy_phone(ok,PHONE,info_pass,info_limit)
+			ProxyMod:proxy_phone(ok,info_pass.PHONE,info_pass,info_limit)
+			return
 		elseif field[1] == 'proxy_version' then
-			ProxyMod:proxy_version(ok,VERSION,info_pass,info_limit)
+			ProxyMod:proxy_version(ok,info_pass.VERSION,info_pass,info_limit)
+			return
 		else
 			return
 		end
 	else
-		local REQINFO = {IP,CHANNEL,VERSION,PHONE}
-		local serverip,serr = rediscmd:hget('upgrade','update')
-		-- ngx.say(info_pass.status,info_limit.status)
+		local REQINFO = {info_pass.IP,info_pass.CHANNEL,info_pass.VERSION,info_pass.PHONE}
 		ProxyMod:proxy_association(field,REQINFO,info_pass,info_limit)
+		return
 	end
 end
 

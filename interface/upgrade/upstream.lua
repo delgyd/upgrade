@@ -1,7 +1,6 @@
 --从缓存中获取upstream配置并重新加载nginx
 local _M = {}
-local log = ngx.log
-local ERR = ngx.ERR
+
 local rediscmd = require('interface.utils.rediscmd')
 local limit_mode = require('interface.limit.limitindex')
 local socket = require("socket")
@@ -55,6 +54,7 @@ _M.upstream = function(self,info_pass,info_limit)
 			local ok,err = rediscmd:hset(key,serverip,'updating')
 			if ok then
 				os.execute('sh /data/webapp/openresty/nginx/conf/lua_conf/reload.sh')
+				return
 			end
 		elseif s_status == 'end' then
 			local ok,err = rediscmd:hget(key,'upstream_online')
@@ -64,11 +64,13 @@ _M.upstream = function(self,info_pass,info_limit)
 			local ok,err = rediscmd:hdel(key,serverip)
 			if ok then
 				os.execute('sh /data/webapp/openresty/nginx/conf/lua_conf/reload.sh')
+				return
 			end
 		elseif s_status == 'updating' then
 			ngx.exec('@proxyB')
 		else
 			limit_mode:limit(info_pass,info_limit)
+			return
 		end
 	else
 		--非设置为当前正在的更新服务器,需要根据当前正在更新服务器的状态进行一致为更新中,第一次进来,需要设置本机的更新状态,并拉取upgrade-upstream配置,并且加载nginx
@@ -82,9 +84,11 @@ _M.upstream = function(self,info_pass,info_limit)
 				if ok then
 					limit_mode:limit(info_pass,info_limit)
 					os.execute('sh /data/webapp/openresty/nginx/conf/lua_conf/reload.sh')
+					return
 				end
 			elseif s_status == 'end' or s_status == nil then
 				limit_mode:limit(info_pass,info_limit)
+				return
 			end
 		else
 			--与正在更新服务器的状态一致
@@ -94,8 +98,10 @@ _M.upstream = function(self,info_pass,info_limit)
 			elseif s_status == 'end' or serr == nil then
 				local ok,err = rediscmd:hdel(key,info_pass.hostip)
 				limit_mode:limit(info_pass,info_limit)
+				return
 			else
 				limit_mode:limit(info_pass,info_limit)
+				return
 			end
 		end
 	end
