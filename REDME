@@ -1,0 +1,9 @@
+/limit_and_upgrade/admin　后台管理接口
+/limit_and_upgrade/admin/api.lua
+/limit_and_upgrade/config 固定配置信息
+/limit_and_upgrade/interface 业务操作接口
+/limit_and_upgrade/interface/limit 限流接口
+/limit_and_upgrade/interface/upgrade　平滑接口
+/limit_and_upgrade/lib 原生接口与模块
+/limit_and_upgrade/utils 自封装接口与模块
+/limit_and_upgrade/index.lua　业务入口

@@ -1,8 +1,8 @@
 ---rediscommand
 local _M = {}
-local conf = require('interface.init')
+local conf = require('config.init')
 local redisconf = conf.Redis
-local redis = require('interface.utils.redis-util')
+local redis = require('utils.redis-util')
 local red = redis:new(redisconf)
 
 _M.ping = function()
@@ -38,6 +38,7 @@ _M.hset = function(self,key,field,value)
 	local res,err = red:hset(key,field,value)
 	return res,err
 end
+
 _M.hdel = function(self,key,field)
 	local res,err = red:hdel(key,field)
 	return res,err
@@ -52,5 +53,6 @@ _M.sismember = function(self,key,member)
 	local res,err = red:sismember(key,member)
 	return res,err
 end
+
 
 return _M
