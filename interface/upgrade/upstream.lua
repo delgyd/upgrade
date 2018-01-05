@@ -1,16 +1,13 @@
 --从缓存中获取upstream配置并重新加载nginx
 local _M = {}
 
-local rediscmd = require('interface.utils.rediscmd')
+local rediscmd = require('utils.rediscmd')
 local limitcmd = require('interface.limit.limitindex')
 local file = require('utils.files')
 local socket = require("socket")
 
 
-_M.upstream = function(info_pass,info_limit)
--- ngx.say(type(info_limit),type(info_pass))
-	-- --获取本服务器IP
-	-- local hostip = unpack(GetAdd(socket.dns.gethostname()))
+_M.upstream = function(self,info_pass,info_limit)
 	--获取当前正在升级服务器的IP
 	local serverip,serr = rediscmd:hget(info_pass.Upgradekey,'update')
 	--获取本机与当前正在更新服务器的更新状态
@@ -48,7 +45,6 @@ _M.upstream = function(info_pass,info_limit)
 			ngx.exec('@proxyB')
 		else
 			limitcmd:limit(info_pass,info_limit)
-			return
 		end
 	else
 		--非设置为当前正在的更新服务器,需要根据当前正在更新服务器的状态进行一致为更新中,第一次进来,需要设置本机的更新状态,并拉取upgrade-upstream配置,并且加载nginx

@@ -59,21 +59,20 @@ end
 local ckv = ngx.var["cookie_SmsNoPwdLoginCookie"]
 -- if not ckv then return end
 local IP = headers['X_FORWARDED_FOR'] or ngx.var.remote_addr
--- if type(IP) == 'table' then return end
+if type(IP) == 'table' then
+	local tlen = table.getn(IP)
+	IP = IP[tlen]
+end
 
 if not ckv or type(IP) == 'table' then return end
-
-local grade1,err = rediscmd:hget('limit','grade1')
-local grade2,err = rediscmd:hget('limit','grade2')
-local grade3,err = rediscmd:hget('limit','grade3')
 
 local info = {
 	['id'] = ckv,
 	['active'] = active,
 	['url'] = url,
-	['grade1'] = tonumber(grade1) or 30,
-	['grade2'] = tonumber(grade1) or 60,
-	['grade3'] = tonumber(grade1) or 90,
+	['grade1'] = 30,
+	['grade2'] = 60,
+	['grade3'] = 90,
 	['rdm'] = rdm,
 	['hostip'] = ngx.var.serverip,
 	['IP'] = IP or '192.168.1.33',

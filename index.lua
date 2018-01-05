@@ -5,9 +5,7 @@ local check = require('utils.check')
 local headers = ngx.req.get_headers()
 local limitcmd = require('interface.limit.limitindex')
 local upgradecmd = require('interface.upgrade.upindex')
-
 local socket = require("socket")
-
 
 --获取请求url
 local url = ngx.var.uri
@@ -26,6 +24,19 @@ if type(IP) == 'table' then
 	IP = IP[tlen]
 end
 
+--[[
+--获取本机IP函数方法
+local function GetAdd(hostname)
+	local ip, resolved = socket.dns.toip(hostname)
+	local ListTab = {}
+	for k, v in ipairs(resolved.ip) do
+		table.insert(ListTab, v)
+	end
+	return ListTab
+end
+	--获取本服务器IP
+local hostip = unpack(GetAdd(socket.dns.gethostname()))
+--]]
 
 --根据缓存可用性选用随机精确值
 local status = check:checkredis()
@@ -33,9 +44,6 @@ if not status then
 --获取请求随机数毫秒级，可用于防刷操作
 	math.randomseed(tostring(socket.gettime()):reverse():sub(1, 10)) 
 	rdm = math.random(1,100)
-	local grade1,err = rediscmd:hget('limit','grade1')
-	local grade2,err = rediscmd:hget('limit','grade2')
-	local grade3,err = rediscmd:hget('limit','grade3')
 else
 --获取请求随机数秒级
 	math.randomseed(tostring(os.time()):reverse():sub(1, 10))
@@ -51,11 +59,15 @@ local info = {
 	['id'] = ckv,
 	['active'] = active,
 	['url'] = url,
-	['grade1'] = tonumber(grade1) or 30,
-	['grade2'] = tonumber(grade1) or 60,
-	['grade3'] = tonumber(grade1) or 90,
+	-- ['grade1'] = tonumber(grade1) or 30,
+	-- ['grade2'] = tonumber(grade1) or 60,
+	-- ['grade3'] = tonumber(grade1) or 90,
+	['grade1'] = tonumber(config.Limit.L1) or 30,
+	['grade2'] = tonumber(config.Limit.L2) or 60,
+	['grade3'] = tonumber(config.Limit.L3) or 90,
 	['rdm'] = rdm,
 	['hostip'] = config.Service.hostip,
+	-- ['hostip'] = hostip,
 	['IP'] = IP or '192.168.1.33',
 	['CHANNEL'] = headers['channel'] or 'xwtec',
 	['VERSION'] = headers['version'] or '0.0.1',
@@ -94,5 +106,3 @@ else
 		limitcmd:limit(info_pass,info_limit)
 	end
 end
-
---]]

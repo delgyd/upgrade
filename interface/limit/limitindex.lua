@@ -7,16 +7,19 @@ local log = require('utils.files')
 
 local limit_server = function(opt)
 	if opt.servermod == 'scmccClient' then
-		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 		ngx.redirect("/limit_json")
 	elseif opt.servermod == 'scmccClientWap' then
-		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 		ngx.redirect('/limit_static/index.html')
 	elseif opt.servermod == 'scmccCampaign' then
-		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 		ngx.redirect('/limit_static/index.html')
 	elseif opt.servermod == 'scmcc' then
-		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
+		ngx.redirect('/limit_static/index.html')
+	else
+		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 		ngx.redirect('/limit_static/index.html')
 	end
 end
@@ -27,11 +30,11 @@ local carry_redis = function (opt)
 		if opt.status == 'limit' then
 			limit_server(opt,'limit')
 		elseif opt.status == 'pass' then
-			log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+			log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 		end
 	end
 	if opt.id == 'scmcc' then
-		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 		return
 	else
 		local ok,err = rediscmd:exists(opt.id)
@@ -47,7 +50,7 @@ local carry_redis = function (opt)
 			if opt.status == 'limit' then
 				limit_server(opt)
 			elseif opt.status == 'pass' then
-				log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+				log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 			end
 		elseif ok == 1 then
 			local ok,err = rediscmd:hget(opt.id,"status")
@@ -57,16 +60,16 @@ local carry_redis = function (opt)
 			elseif ok == 'pass' then
 				opt.status = 'pass'
 				if opt.id == 'xwtec' then
-					log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+					log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 					return
 				else
 					local ok,err = rediscmd:hincrby(opt.id,opt.url,1)
 					if ok >= 20 then
 						local ok,err = rediscmd:hset(opt.id,'status','limit')
 						if not ok then return end
-						log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+						log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 					else
-						log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|','a+')
+						log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 					end
 				end
 			end
@@ -74,7 +77,7 @@ local carry_redis = function (opt)
 	end
 end
 _M.limit = function(self,info_pass,info_limit)
-	if info_pass.active >= 1 and info_pass.active < 600 then
+	if info_pass.active >= 500 and info_pass.active < 600 then
 		if  info_pass.rdm <= info_pass.grade1 then
 			carry_redis(info_limit)
 		else
@@ -96,7 +99,7 @@ _M.limit = function(self,info_pass,info_limit)
 		carry_redis(info_limit)
 	else
 		carry_redis(info_pass)
-	end
+	end	
 end
 
 return _M
