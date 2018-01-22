@@ -51,8 +51,8 @@ else
 end
 
 local ckv = ngx.var["cookie_SmsNoPwdLoginCookie"]
-if not ckv then
-	ckv = 'xwtec'
+if not ckv or ckv == ngx.null or ckv == "" then
+	ckv = 'scmcc'
 end
 
 local info = {
@@ -76,33 +76,41 @@ local info = {
 	['Time'] = os.date("%Y")..os.date("%m")..os.date("%d")..os.date("%H"),
 	['Limitkey'] = 'limit',
 	['Upgradekey'] = 'upgrade',
+	['servermod'] = config.Service.service,
 }
 local info_limit = setmetatable({['status'] = 'limit'},{__index = info})
 local info_pass = setmetatable({['status'] = 'pass'},{__index = info})
 
-if url == "/scmccClient/action.dox" or url == "/scmccClient/action.dox?" then
-	info_limit['servermod'] = 'scmccClient'
-	info_pass['servermod'] = 'scmccClient'
-elseif string.find(url,"scmccClientWap") then
-	info_limit['servermod'] = 'scmccClientWap'
-	info_pass['servermod'] = 'scmccClientWap'
-elseif string.find(url,"scmccCampaign") then
-	info_limit['servermod'] = 'scmccCampaign'
-	info_pass['servermod'] = 'scmccCampaign'
-else
-	info_limit['servermod'] = 'scmcc'
-	info_pass['servermod'] = 'scmcc'
-end
-
 local status = check:checkredis()
 if not status then
+	info_pass['Redis_status'] = 'off'
+	info_limit['Redis_status'] = 'off'
 	limitcmd:limit(info_pass,info_limit)
 else
-	local switch,err = rediscmd:hget('upgrade','switch')
-	local proxy,err = rediscmd:hget('upgrade','proxy')
-	if switch == 'on' and proxy then
-		upgradecmd:upgrade(proxy,info_pass,info_limit)
+	local brushproof,err = rediscmd:hget('limit','brushproof')
+	if brushproof then
+		info_pass['brushproof'] = brushproof
+		info_limit['brushproof'] = brushproof
 	else
+		info_pass['brushproof'] = 'off'
+		info_limit['brushproof'] = 'off'
+	end
+	info_pass['Redis_status'] = 'on'
+	info_limit['Redis_status'] = 'on'
+	local id_active,err = rediscmd:hget(info_pass.id,'ACTIVE')
+	if id_active == nil then 
 		limitcmd:limit(info_pass,info_limit)
+	else
+		if tonumber(id_active) < 300  and active < 300 then
+			local switch,err = rediscmd:hget('upgrade','switch')
+			local proxy,err = rediscmd:hget('upgrade','proxy')
+			if switch == 'on' and proxy then
+				upgradecmd:upgrade(proxy,info_pass,info_limit)
+			else
+				limitcmd:limit(info_pass,info_limit)
+			end
+		else
+			limitcmd:limit(info_pass,info_limit)
+		end
 	end
 end

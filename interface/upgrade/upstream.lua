@@ -5,6 +5,7 @@ local rediscmd = require('utils.rediscmd')
 local limitcmd = require('interface.limit.limitindex')
 local file = require('utils.files')
 local socket = require("socket")
+local config = require('config.init')
 
 
 _M.upstream = function(self,info_pass,info_limit)
@@ -23,10 +24,12 @@ _M.upstream = function(self,info_pass,info_limit)
 			local ok,err =  rediscmd:hget(info_pass.Upgradekey,'upstream_transfer')
 			if ok then
 				file:write('/data/webapp/openresty/nginx/conf/upstream_conf/online.conf',ok,'w+')
+				file:write(config.Outfile.upgradelog..info_pass.Time,info_pass.Date..'|'..'临时跳转的upstream配置写入','a+')
 			end
 			local ok,err =  rediscmd:hget(info_pass.Upgradekey,'upstream_upgrade')
 			if ok then 
 				file:write('/data/webapp/openresty/nginx/conf/upstream_conf/upgrade.conf',ok,'w+')
+				file:write(config.Outfile.upgradelog..info_pass.Time,info_pass.Date..'|'..'升级跳转的upstream配置写入','a+')
 			end
 			local ok,err = rediscmd:hset(info_pass.Upgradekey,serverip,'updating')
 			if ok then
@@ -39,9 +42,11 @@ _M.upstream = function(self,info_pass,info_limit)
 			end
 			local ok,err = rediscmd:hdel(info_pass.Upgradekey,serverip)
 			if ok then
+				file:write(config.Outfile.upgradelog..info_pass.Time,info_pass.Date..'|'..'原始的upstream配置文件回滚','a+')
 				os.execute('sh /data/webapp/openresty/nginx/conf/lua_conf/reload.sh')
 			end
 		elseif s_status == 'updating' then
+			file:write(config.Outfile.upgradelog..info_pass.Time,info_pass.Date..'|'..'@proxyB'..'|'..info_pass.active..'|'..info_pass.id..'|'..info_pass.status..'|'..info_pass.IP..'|','a+')
 			ngx.exec('@proxyB')
 		else
 			limitcmd:limit(info_pass,info_limit)
@@ -53,6 +58,7 @@ _M.upstream = function(self,info_pass,info_limit)
 				local ok,err =  rediscmd:hget(info_pass.Upgradekey,'upstream_upgrade')
 				if ok then
 					file:write('/data/webapp/openresty/nginx/conf/upstream_conf/upgrade.conf',ok,'w+')
+					file:write(config.Outfile.upgradelog..info_pass.Time,info_pass.Date..'|'..'升级跳转的upstream配置写入','a+')
 				end
 				local ok,err = rediscmd:hset(info_pass.Upgradekey,info_pass.hostip,'updating')
 				if ok then
@@ -65,6 +71,7 @@ _M.upstream = function(self,info_pass,info_limit)
 		else
 			--与正在更新服务器的状态一致
 			if h_status == 'updating' and s_status == 'updating' then
+				file:write(config.Outfile.upgradelog..info_pass.Time,info_pass.Date..'|'..'@proxyB'..'|'..info_pass.active..'|'..info_pass.id..'|'..info_pass.status..'|'..info_pass.IP..'|','a+')
 				ngx.exec('@proxyB')
 			--正在更新服务器的状为end或者已经被清理后,主动清理本机状态
 			elseif s_status == 'end' or serr == nil then

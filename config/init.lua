@@ -12,7 +12,7 @@ _M.Redis = {
 }
 _M.Service = {
 	['service'] = 'scmccClient',
-	['hostip'] = '10.113.158.69',
+	['hostip'] = '192.168.1.2',
 }
 _M.Limit = {
         ['L1'] = 30,
@@ -20,7 +20,7 @@ _M.Limit = {
         ['L3'] = 90,
 }
 _M.Outfile = {
-	['limitlog'] = '/data/webapp/logs/lua-limit-',
+	['limitlog'] = '/data/webapp/openresty/nginx/logs/lua-',
 	['upgradelog'] = '/data/webapp/logs/lua-upgrade-',
 	['apilog'] = '/data/webapp/logs/lua-api-',
 }

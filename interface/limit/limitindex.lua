@@ -25,49 +25,48 @@ local limit_server = function(opt)
 end
 
 local carry_redis = function (opt)
-	local status = check:checkredis()
-	if not status then
+	if opt.Redis_status == 'off' then
 		if opt.status == 'limit' then
 			limit_server(opt,'limit')
 		elseif opt.status == 'pass' then
 			log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 		end
-	end
-	if opt.id == 'scmcc' then
-		log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
-		return
 	else
-		local ok,err = rediscmd:exists(opt.id)
-		if ok == 0  then
-			local ok,err = rediscmd:hset(opt.id,'status',opt.status)
-			if not ok then return end
-			local ok,err = rediscmd:hset(opt.id,opt.url,1)
-			if not ok then return end
-			local ok,err = rediscmd:hset(opt.id,'ACTIVE',opt.active)
-			if not ok then return end
-			local ok,err = rediscmd:expire(opt.id,120)
-			if not ok then return end
-			if opt.status == 'limit' then
-				limit_server(opt)
-			elseif opt.status == 'pass' then
-				log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
-			end
-		elseif ok == 1 then
-			local ok,err = rediscmd:hget(opt.id,"status")
-			if ok == 'limit' then
-				opt.status = 'limit'
-				limit_server(opt)
-			elseif ok == 'pass' then
-				opt.status = 'pass'
-				if opt.id == 'xwtec' then
+		if opt.id == 'scmcc' then
+			log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
+			return
+		else
+			local ok,err = rediscmd:exists(opt.id)
+			if ok == 0  then
+				local ok,err = rediscmd:hset(opt.id,'status',opt.status)
+				if not ok then return end
+				local ok,err = rediscmd:hset(opt.id,opt.url,1)
+				if not ok then return end
+				local ok,err = rediscmd:hset(opt.id,'ACTIVE',opt.active)
+				if not ok then return end
+				local ok,err = rediscmd:expire(opt.id,120)
+				if not ok then return end
+				if opt.status == 'limit' then
+					limit_server(opt)
+				elseif opt.status == 'pass' then
 					log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
-					return
-				else
-					local ok,err = rediscmd:hincrby(opt.id,opt.url,1)
-					if ok >= 20 then
-						local ok,err = rediscmd:hset(opt.id,'status','limit')
-						if not ok then return end
-						log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
+				end
+			elseif ok == 1 then
+				local ok,err = rediscmd:hget(opt.id,"status")
+				if ok == 'limit' then
+					opt.status = 'limit'
+					limit_server(opt)
+				elseif ok == 'pass' then
+					opt.status = 'pass'
+					if opt.brushproof == 'on' then
+						local ok,err = rediscmd:hincrby(opt.id,opt.url,1)
+						if ok >= 120 then
+							local ok,err = rediscmd:hset(opt.id,'status','limit')
+							if not ok then return end
+							log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
+						else
+							log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
+						end
 					else
 						log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 					end
@@ -95,8 +94,9 @@ _M.limit = function(self,info_pass,info_limit)
 		else
 			carry_redis(info_pass)
 		end
-	elseif info_pass.active >=1100 then
-		carry_redis(info_limit)
+	elseif info_pass.active >=1000 then
+		-- carry_redis(info_limit)
+		limit_server(info_limit)
 	else
 		carry_redis(info_pass)
 	end	
