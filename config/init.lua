@@ -22,7 +22,6 @@ _M.Limit = {
 _M.Outfile = {
 	['limitlog'] = '/data/webapp/openresty/nginx/logs/lua-',
 	['upgradelog'] = '/data/webapp/logs/lua-upgrade-',
-	['apilog'] = '/data/webapp/logs/lua-api-',
 }
 
 return _M
