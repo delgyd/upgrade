@@ -39,6 +39,11 @@ _M.hset = function(self,key,field,value)
 	return res,err
 end
 
+_M.hmset = function(self,...)
+	local res,err = red:hmset(...)
+	return res,err
+end
+
 _M.hdel = function(self,key,field)
 	local res,err = red:hdel(key,field)
 	return res,err
@@ -54,5 +59,9 @@ _M.sismember = function(self,key,member)
 	return res,err
 end
 
+_M.ttl = function(self,key)
+        local res,err = red:ttl(key)
+        return res,err
+end
 
 return _M
