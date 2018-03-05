@@ -38,14 +38,8 @@ local carry_redis = function (opt)
 		else
 			local ok,err = rediscmd:exists(opt.id)
 			if ok == 0  then
-				local ok,err = rediscmd:hset(opt.id,'status',opt.status)
-				if not ok then return end
-				local ok,err = rediscmd:hset(opt.id,opt.url,1)
-				if not ok then return end
-				local ok,err = rediscmd:hset(opt.id,'ACTIVE',opt.active)
-				if not ok then return end
+				local ok,err = rediscmd:hmset(opt.id,'status',opt.status,opt.url,1,'ACTIVE',opt.active,'HOST',opt.hostip,'Time',opt.Date)
 				local ok,err = rediscmd:expire(opt.id,120)
-				if not ok then return end
 				if opt.status == 'limit' then
 					limit_server(opt)
 				elseif opt.status == 'pass' then
@@ -54,6 +48,10 @@ local carry_redis = function (opt)
 			elseif ok == 1 then
 				local ok,err = rediscmd:hget(opt.id,"status")
 				if ok == 'limit' then
+					local ok,err = rediscmd:ttl(opt.id)
+					if ok < 0 then
+						local ok,err = rediscmd:expire(opt.id,5)
+					end
 					opt.status = 'limit'
 					limit_server(opt)
 				elseif ok == 'pass' then
@@ -68,6 +66,7 @@ local carry_redis = function (opt)
 							log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 						end
 					else
+						local ok,err = rediscmd:hincrby(opt.id,opt.url,1)
 						log:write(config.Outfile.limitlog..opt.Time,opt.Date..'|'..opt.url..'|'..opt.active..'|'..opt.id..'|'..opt.status..'|'..opt.IP..'|','a+')
 					end
 				end
@@ -76,26 +75,25 @@ local carry_redis = function (opt)
 	end
 end
 _M.limit = function(self,info_pass,info_limit)
-	if info_pass.active >= 500 and info_pass.active < 600 then
+	if info_pass.active >= 700 and info_pass.active < 800 then
 		if  info_pass.rdm <= info_pass.grade1 then
 			carry_redis(info_limit)
 		else
 			carry_redis(info_pass)
 		end
-	elseif info_pass.active >= 600 and info_pass.active < 800 then
+	elseif info_pass.active >= 800 and info_pass.active < 900 then
 		if  info_pass.rdm <= info_pass.grade2 then
 			carry_redis(info_limit)
 		else
 			carry_redis(info_pass)
 		end
-	elseif info_pass.active >= 800 and info_pass.active < 1000 then
+	elseif info_pass.active >= 900 and info_pass.active < 1000 then
 		if  info_pass.rdm <= info_pass.grade3 then
 			carry_redis(info_limit)
 		else
 			carry_redis(info_pass)
 		end
 	elseif info_pass.active >=1000 then
-		-- carry_redis(info_limit)
 		limit_server(info_limit)
 	else
 		carry_redis(info_pass)
