@@ -5,7 +5,7 @@ local ProxyMod = require('interface.upgrade.proxy')
 local retype = require('utils.type-conv')
 
 
-_M.upgrade = function(self,option,info_pass,info_limit)
+_M.upgrade = function(self,option,info_pass,info_limit,uniq)
 	local tproxy = retype:StrToTable(option)
 	local field = {}
 	if type(tproxy) == 'table' then
@@ -33,7 +33,7 @@ _M.upgrade = function(self,option,info_pass,info_limit)
 		end
 	else
 		local REQINFO = {info_pass.IP,info_pass.CHANNEL,info_pass.VERSION,info_pass.PHONE}
-		ProxyMod:proxy_association(field,REQINFO,info_pass,info_limit)
+		ProxyMod:proxy_association(field,REQINFO,info_pass,info_limit,uniq)
 	end
 end
 

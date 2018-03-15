@@ -50,7 +50,7 @@ _M.proxy_version = function(self,option,VERSION,info_pass,info_limit) --{'3.4.0'
 	end
 end
 
-_M.proxy_association = function(self,option,REQINFO,info_pass,info_limit) --proxy {'ip','phone','version','head'}多策略组合平滑升级 --{'ip','phone'}
+_M.proxy_association = function(self,option,REQINFO,info_pass,info_limit,uniq) --proxy {'ip','phone','version','head'}多策略组合平滑升级 --{'ip','phone'}
 		local PP = {}
 		local key = info_pass.Upgradekey
 		for pk,pv in pairs(option) do
@@ -61,23 +61,40 @@ _M.proxy_association = function(self,option,REQINFO,info_pass,info_limit) --prox
 					table.insert(PP,okv)
 				end
 			else
-					table.insert(PP,okv)
+					table.insert(PP,ok)
 			end
 		end
-		local temp = {}
-		for kR,vR in pairs(REQINFO) do
-			for kP,vP in pairs(PP) do
-				if vR == vP then
-					table.insert(temp,vR)
+		if uniq == 'off' then
+			local temp = {}
+			for kR,vR in pairs(REQINFO) do
+				for kP,vP in pairs(PP) do
+					if vR == vP then
+						table.insert(temp,vR)
+					end
 				end
 			end
-		end
-		local tlen = table.getn(temp)
-		local olen = table.getn(option)
-		if tlen >= olen then
-			up_upstream:upstream(info_pass,info_limit)
+			local tlen = table.getn(temp)
+			if tlen >= 1 then
+				up_upstream:upstream(info_pass,info_limit)
+			else
+				limitcmd:limit(info_pass,info_limit)
+			end
 		else
-			limitcmd:limit(info_pass,info_limit)
+			local temp = {}
+			for kR,vR in pairs(REQINFO) do
+				for kP,vP in pairs(PP) do
+					if vR == vP then
+						table.insert(temp,vR)
+					end
+				end
+			end
+			local tlen = table.getn(temp)
+			local olen = table.getn(option)
+			if tlen >= olen then
+				up_upstream:upstream(info_pass,info_limit)
+			else
+				limitcmd:limit(info_pass,info_limit)
+			end
 		end	
 end
 return _M
