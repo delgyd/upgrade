@@ -44,6 +44,11 @@ _M.hmset = function(self,...)
 	return res,err
 end
 
+_M.hmget = function(self,...)
+	local res,err = red:hmget(...)
+	return res,err
+end
+
 _M.hdel = function(self,key,field)
 	local res,err = red:hdel(key,field)
 	return res,err
