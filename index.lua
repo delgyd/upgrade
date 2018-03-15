@@ -98,10 +98,9 @@ else
 		limitcmd:limit(info_pass,info_limit)
 	else
 		if tonumber(id_active) < 300  and active < 300 then
-			local switch,err = rediscmd:hget('upgrade','switch')
-			local proxy,err = rediscmd:hget('upgrade','proxy')
-			if switch == 'on' and proxy then
-				upgradecmd:upgrade(proxy,info_pass,info_limit)
+			local ok,err = rediscmd:hmget('upgrade','switch','proxy','uniqueness')
+			if ok[1] == 'on' and ok[2] ~= ngx.null and ok[3] ~= ngx.null then
+				upgradecmd:upgrade(ok[2],info_pass,info_limit,ok[3])
 			else
 				limitcmd:limit(info_pass,info_limit)
 			end
